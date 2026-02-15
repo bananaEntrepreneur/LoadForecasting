@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: loadforecasting
+Version: 0.1.0
+Summary: Load Foreceastin Data Analytics app
+Requires-Python: >=3.12
+Requires-Dist: altair<5.0.0,>=4.0.0
+Requires-Dist: fastapi>=0.129.0
+Requires-Dist: joblib>=1.5.3
+Requires-Dist: numpy>=2.4.2
+Requires-Dist: pandas<3.0.0,>=1.4.0
+Requires-Dist: streamlit<1.28.0,>=1.19.0
+Requires-Dist: uvicorn>=0.40.0
+Requires-Dist: xgboost>=2.0.0

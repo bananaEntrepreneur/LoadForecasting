@@ -1,6 +1,8 @@
 import joblib
+import os
 
-model = joblib.load("models/xgb_model.pkl")
+model_path = os.path.join(os.path.dirname(__file__), "..", "models", "xgb_model.pkl")
+model = joblib.load(model_path)
 
 def forecast_load(last_data, days=30):
 

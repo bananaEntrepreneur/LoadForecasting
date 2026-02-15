@@ -1,0 +1,6 @@
+[project]
+name = "loadforecasting"
+version = "0.1.0"
+description = "Load Foreceastin Data Analytics app"
+requires-python = ">=3.12"
+dependencies = []

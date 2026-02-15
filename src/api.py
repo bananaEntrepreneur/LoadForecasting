@@ -1,13 +1,11 @@
 from fastapi import FastAPI, HTTPException
-import pandas as pd
 import numpy as np
 import sys
 import os
 
 sys.path.append(os.path.dirname(__file__))
 
-from forecast import forecast_load
-from capacity import calculate_servers
+from utils import calculate_forecast_and_capacity
 
 app = FastAPI(title="Server Load Forecast API", description="API for forecasting server load and calculating capacity needs")
 
@@ -21,6 +19,17 @@ async def get_forecast(
     base_rps: float = 150000.0,
     growth_rate: float = 5.0
 ):
+    """
+    Get server load forecast with capacity planning
+    
+    Args:
+        days: Forecast horizon in days (default: 30, min: 1, max: 365)
+        base_rps: Current average RPS (default: 150000, min: 1000, max: 1000000)
+        growth_rate: Monthly growth percentage (default: 5%, min: 0, max: 50)
+    
+    Returns:
+        Dictionary containing forecasted traffic, required servers, and costs
+    """
     if days < 1 or days > 365:
         raise HTTPException(status_code=400, detail="Days must be between 1 and 365")
     
@@ -30,28 +39,11 @@ async def get_forecast(
     if growth_rate < 0 or growth_rate > 50:
         raise HTTPException(status_code=400, detail="Growth rate must be between 0 and 50")
 
-    growth_rate_decimal = growth_rate / 100
-    last_data = pd.DataFrame([{
-        "lag_1": base_rps,
-        "lag_7": base_rps * 0.9,
-        "rolling_7": base_rps * 0.95,
-        "dayofweek": 2,
-        "month": 11
-    }])
-
-    preds = forecast_load(last_data, days)
-
-    growth_preds = []
-    val = preds[0]
-    for p in preds:
-        val = p * (1 + growth_rate_decimal/30)
-        growth_preds.append(val)
-
-    servers, cost = calculate_servers(growth_preds)
-
-    p95 = np.percentile(growth_preds, 95)
-    peak_servers = int(np.ceil(p95 / 20000))
-    peak_cost = peak_servers * 300
+    growth_preds, servers, cost, p95, peak_servers, peak_cost = calculate_forecast_and_capacity(
+        base_rps=base_rps,
+        days=days,
+        growth_rate=growth_rate
+    )
     
     return {
         "forecast_days": days,

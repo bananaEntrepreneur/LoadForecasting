@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from forecast import forecast_load
-from capacity import calculate_servers
+from utils import calculate_forecast_and_capacity
 
 st.set_page_config(page_title="Server Capacity Forecast", layout="wide")
 
 st.title("Server Load Forecast")
-st.write("ML-прогноз нагрузки и расчёт инфраструктуры")
+st.write("ML-forecast infrastructure")
 
 st.divider()
 
@@ -33,16 +32,11 @@ last_data = pd.DataFrame([{
 
 if st.button("Run forecast"):
 
-    preds = forecast_load(last_data, days)
-
-    growth_preds = []
-    val = preds[0]
-
-    for p in preds:
-        val = p * (1 + growth_rate/30)
-        growth_preds.append(val)
-
-    servers, cost = calculate_servers(growth_preds)
+    growth_preds, servers, cost, p95, peak_servers, peak_cost = calculate_forecast_and_capacity(
+        base_rps=base,
+        days=days,
+        growth_rate=growth
+    )
 
     st.subheader("Traffic forecast (RPS)")
     st.line_chart(growth_preds)
@@ -58,10 +52,6 @@ if st.button("Run forecast"):
 
     st.divider()
     st.subheader("Peak capacity planning (p95)")
-
-    p95 = np.percentile(growth_preds, 95)
-    peak_servers = int(np.ceil(p95 / 20000))
-    peak_cost = peak_servers * 300
 
     st.metric("Servers for peak load", peak_servers)
     st.metric("Peak monthly cost ($)", peak_cost)
